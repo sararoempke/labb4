@@ -53,13 +53,13 @@ public class Menu extends Application /*implements EventHandler<ActionEvent>*/ {
                 System.out.println("Vill addera en image");
                 FileChooser fileChoice = new FileChooser();
 
-                FileChooser.ExtensionFilter extFilterJPG = new FileChooser.ExtensionFilter("JPG files (*.jpg)", "*.JPG");
-                FileChooser.ExtensionFilter extFilterPNG = new FileChooser.ExtensionFilter("PNG files (*.png)", "*.PNG");
-                fileChoice.getExtensionFilters().addAll(extFilterJPG, extFilterPNG);
+                //FileChooser.ExtensionFilter extFilterJPG = new FileChooser.ExtensionFilter("JPG files (*.jpg)", "*.JPG");
+                //FileChooser.ExtensionFilter extFilterPNG = new FileChooser.ExtensionFilter("PNG files (*.png)", "*.PNG");
+                //fileChoice.getExtensionFilters().addAll(extFilterJPG, extFilterPNG);
 
                 File file = fileChoice.showOpenDialog(null);
 
-                try{
+                try{ // kanske lägga til en if file == null
                     BufferedImage bufferedImage = ImageIO.read(file);
                     Image image = SwingFXUtils.toFXImage(bufferedImage, null);
                     myImageView.setImage(image);
@@ -68,7 +68,7 @@ public class Menu extends Application /*implements EventHandler<ActionEvent>*/ {
 
                 }
                     }
-            }
+                        }
 
                 );
 
@@ -103,4 +103,3 @@ public class Menu extends Application /*implements EventHandler<ActionEvent>*/ {
     
     
 }
-
