@@ -5,101 +5,156 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.BorderPane;
-import javafx.stage.Stage;
-import javafx.scene.control.Button;
-import javafx.scene.control.Alert;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import model.Model;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javax.imageio.ImageIO;
 
+public class myView extends BorderPane {
 
-/**
- * 
- *
- * @author sarar
- */
-public class Menu extends Application /*implements EventHandler<ActionEvent>*/ {
+    private final Model model;
+    private final BorderPane pane;
+    public ImageView myImageView;
+    //private final Controller controller;
+
+    
     private final Alert alert = new Alert(Alert.AlertType.INFORMATION);
-    ImageView myImageView;
-    
-    @Override
-    public void start(Stage primaryStage){
+
+    public myView(Model model) {
+        this.model = model;
+        //controller = new Controller(model, this);
         
-        VBox vBox = new VBox(15);
-        vBox.setPadding(new Insets(30, 10, 10, 10));
-        Button btAddPic = new Button("Add Image");
-        Button btInvertColor = new Button("Invert Color");
-        Button btBlurPic = new Button("Blur");
-        Button btContrast = new Button("Contrast");
-        Button btHistogram = new Button("View Histogram");
-        Button btSavePic = new Button("Save Image");
-        vBox.getChildren().addAll(btAddPic, btInvertColor, btBlurPic, btContrast, btHistogram, btSavePic);
-        
-        FileChooser filechoice = new FileChooser();
+        pane = new BorderPane();
         myImageView = new ImageView();
-        
-                btAddPic.setOnAction( new EventHandler<ActionEvent>(){
-                    @Override
-                    public void handle(ActionEvent event) {
-                System.out.println("Vill addera en image");
-                FileChooser fileChoice = new FileChooser();
+      
+        MenuBar menuBar = createMenu();//arg controller??
+	
+        this.setTop(menuBar);
+        this.setRight(myImageView);
 
-                //FileChooser.ExtensionFilter extFilterJPG = new FileChooser.ExtensionFilter("JPG files (*.jpg)", "*.JPG");
-                //FileChooser.ExtensionFilter extFilterPNG = new FileChooser.ExtensionFilter("PNG files (*.png)", "*.PNG");
-                //fileChoice.getExtensionFilters().addAll(extFilterJPG, extFilterPNG);
-
-                File file = fileChoice.showOpenDialog(null);
-
-                try{ // kanske lägga til en if file == null
-                    BufferedImage bufferedImage = ImageIO.read(file);
-                    Image image = SwingFXUtils.toFXImage(bufferedImage, null);
-                    myImageView.setImage(image);
-                }catch (IOException ex) {
-
-
+        //updateFromModel();
+    }    
+    
+    private MenuBar createMenu() {//arg controller??
+		MenuItem exitItem = theExit();
+                MenuItem savePic = theSave();
+                MenuItem openPic = toOpenImage();
+		
+		Menu fileMenu = new Menu("File");
+		fileMenu.getItems().addAll(exitItem, savePic, openPic);
+                
+                MenuItem blurPic = blurImage();
+                MenuItem invertColor = toInvertColor();
+                MenuItem histogram = toOpenHistogram();
+                Menu processMenu = new Menu("Process");
+                processMenu.getItems().addAll(histogram, blurPic, invertColor);
+                
+                if(myImageView == null){
+                    processMenu.hide();
                 }
-                    }
-                        }
-
-                );
-
-
-            BorderPane pane = new BorderPane();
-            pane.setLeft(vBox);
-            pane.setRight(myImageView);
-
-            Scene scene = new Scene(pane, 700, 600);
-            primaryStage.setTitle("Testing testing");
-            primaryStage.setScene(scene);
-            primaryStage.show();
-
-       
+                else 
+                    processMenu.show();
+		
+		MenuBar menuBar = new MenuBar();
+		menuBar.getMenus().addAll(fileMenu, processMenu);
+		
+		return menuBar;
+    }
+    
+    // ska fråga om du inte vill spara bild först
+    public MenuItem theExit(){
+        MenuItem exitItem = new MenuItem("Exit");
+        exitItem.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				Platform.exit();
+			}
+		});
         
-       
-        }
-    
-    
-    
-    public static void main(String[] args) {
-        launch(args);
+        return exitItem;
     }
     
-    
-    void showAlert(String message) {
-        alert.setHeaderText("");
-        alert.setTitle("Alert!");
-        alert.setContentText(message);
-        alert.show();
+    public MenuItem theSave(){
+        MenuItem savePic = new MenuItem("Save Image");
+        savePic.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("Save the image");
+                Controller.handleSavePic(myImageView.getImage());
+            }
+        });
+        
+        return savePic;
     }
     
+    public MenuItem toOpenImage(){
+        MenuItem openPic = new MenuItem("Open Image");
+        openPic.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                
+                System.out.println("Open Image");
+                FileChooser fileChoice = new FileChooser();
+        
+                File file = fileChoice.showOpenDialog(null);
+        
+                try{
+                 BufferedImage bufferedImage = ImageIO.read(file);
+                 Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+                 myImageView.setImage(image);
+                }catch (IOException ex) {
+                    Logger.getLogger(myView.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        return openPic;
+    }
     
+    public MenuItem toInvertColor(){
+        MenuItem invertColor = new MenuItem("Invert Color");
+        invertColor.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("Invert Color");
+                Image newImage = Controller.handleInvertColor(myImageView.getImage()); 
+                myImageView.setImage(newImage);
+            }
+        });
+        return invertColor;
+    }
+    
+    public MenuItem blurImage(){
+        MenuItem blurPic = new MenuItem("Blur");
+        blurPic.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("Da blurr");
+                Image newImage = Controller.handleBlurPic(myImageView.getImage()); 
+                myImageView.setImage(newImage);
+            }
+        });
+        return blurPic;
+    }
+    
+    public MenuItem toOpenHistogram(){
+        MenuItem histogram = new MenuItem("Show Histogram");
+        histogram.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("Show Histogram");
+            }
+        });
+        return histogram;
+    }
+
 }
